@@ -18,3 +18,4 @@ matplotlib>=3.8.0           # plots (training curves, samples)
 PyYAML>=6.0                 # read/write data.yaml
 pandas>=2.2.0               # small result tables / CSV summaries
 tqdm>=4.66.0               # progress bars in helper scripts
+datasets>=2.19.0           # only for src/fetch_hf_dataset.py (download a HF weed dataset)

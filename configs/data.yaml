@@ -1,34 +1,8 @@
-# ----------------------------------------------------------------------
-# data.yaml  -  dataset definition consumed by Ultralytics YOLO
-# ----------------------------------------------------------------------
-# This is a TEMPLATE. The real file is generated for you by:
-#
-#     python src/prepare_dataset.py --source <raw_folder> --classes <classes.txt>
-#
-# which writes an absolute `path` so Ultralytics can always find the data.
-#
-# IMPORTANT: Ultralytics resolves a RELATIVE `path:` against its global
-# `datasets_dir` setting (usually ~/datasets), NOT against this file.
-# Always use an ABSOLUTE path here to avoid "dataset not found" errors.
-# ----------------------------------------------------------------------
-
-# Root folder that contains the images/ and labels/ subfolders.
-path: C:/Users/patel/OneDrive/Desktop/Documents/AI-Based Weed Detection in Agricultural Fields/dataset
-
-# Split folders, relative to `path` above.
+path: C:/Users/patel/OneDrive/Desktop/Documents/AI-Based Weed Detection in Agricultural
+  Fields/dataset
 train: images/train
 val: images/val
 test: images/test
-
-# Names, where the KEY is the class index used in the label .txt files.
-# `prepare_dataset.py` overwrites this section from your dataset's classes.txt.
-#
-# CottonWeedDet12 has these 12 classes (INDEX ORDER MUST come from the
-# dataset's own classes.txt / notes.json - the list below is only a reference):
-#   Carpetweed, CutleafGroundcherry, Eclipta, Goosegrass, Morningglory,
-#   PalmerAmaranth, PricklySida, Purslane, Ragweed, Sicklepod, SpottedSpurge,
-#   Waterhemp
-#
-# Default below is a single generic class for a quick smoke test.
 names:
-  0: weed
+  0: crop
+  1: weed

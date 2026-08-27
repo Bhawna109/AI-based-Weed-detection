@@ -1,12 +1,28 @@
 # Dataset
 
-The image data is **not committed** to this repository (it is large and the
-license is non-commercial / attribution). Download and prepare it locally with
-the steps below. `.gitignore` keeps everything here except this file.
+The image data is **not committed** to this repository (large + license terms).
+Download and prepare it locally. `.gitignore` keeps everything here except this
+file.
 
 ---
 
-## Recommended dataset: CottonWeedDet12
+## Quick start (small dataset, one command, no login)
+
+```bash
+python src/fetch_hf_dataset.py     # downloads Francesco/weed-crop-aerial (~165 MB, 1,176 images)
+python src/verify_dataset.py
+python src/train.py
+```
+
+`fetch_hf_dataset.py` pulls a small Hugging Face object-detection dataset
+(aerial crop/weed imagery, already split train/val/test, Creative Commons),
+converts the COCO boxes to YOLO format under `dataset/`, and writes
+`configs/data.yaml`. Use this to get the whole pipeline working, then move to
+the larger CottonWeedDet12 below for a full 12-species result.
+
+---
+
+## Recommended full dataset: CottonWeedDet12
 
 - **What it is:** 5,648 real cotton-field RGB images with **9,370 bounding-box
   annotations** across **12 common weed species**. Photos taken with

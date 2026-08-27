@@ -23,6 +23,9 @@ __pycache__/
 # Ultralytics writes runs here (see --project in the scripts).
 results/runs/
 runs/
+# Bulk generated previews; commit curated picks in results/samples/ by hand.
+results/verify_samples/
+results/predictions/
 
 # ----------------------------- Dataset -------------------------------
 # Do NOT commit the full dataset (large + license restrictions).
