@@ -244,6 +244,17 @@ pip install -r requirements.txt
 
 > On Windows, if `Activate.ps1` is blocked, run once:
 > `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+>
+> **Windows long-path issue:** if `pip install` fails with
+> `[WinError 206] The filename or extension is too long` while installing
+> `torch`, your project path is too deep and Windows long paths are disabled.
+> Fix either way:
+> - **A (no admin):** create the venv at a short path and use it, e.g.
+>   `python -m venv C:\venvs\weed-detection` then
+>   `C:\venvs\weed-detection\Scripts\Activate.ps1` before `pip install`.
+> - **B (admin, permanent):** in an elevated PowerShell run
+>   `Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' LongPathsEnabled 1`,
+>   reboot, then recreate the venv normally.
 
 ## How to train
 
