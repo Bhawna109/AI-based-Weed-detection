@@ -1,0 +1,27 @@
+# ----------------------------------------------------------------------
+# data.yaml  -  dataset definition consumed by Ultralytics YOLO
+# ----------------------------------------------------------------------
+# This is a TEMPLATE. The real file is generated for you by:
+#
+#     python src/prepare_dataset.py --source <raw_folder> --classes <classes.txt>
+#
+# which writes an absolute `path` so Ultralytics can always find the data.
+#
+# IMPORTANT: Ultralytics resolves a RELATIVE `path:` against its global
+# `datasets_dir` setting (usually ~/datasets), NOT against this file.
+# Always use an ABSOLUTE path here to avoid "dataset not found" errors.
+# ----------------------------------------------------------------------
+
+# Root folder that contains the images/ and labels/ subfolders.
+path: C:/Users/patel/OneDrive/Desktop/Documents/AI-Based Weed Detection in Agricultural Fields/dataset
+
+# Split folders, relative to `path` above.
+train: images/train
+val: images/val
+test: images/test
+
+# Number of classes and their names (order defines the class index).
+# Replace the list below with the real class names of your dataset.
+# For CottonWeedDet12 use the names from its `notes.json` / `classes.txt`.
+names:
+  0: weed

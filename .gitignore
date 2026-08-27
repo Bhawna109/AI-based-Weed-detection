@@ -1,0 +1,41 @@
+# ------------------------- Virtual environments -------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# ----------------------------- Python ----------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ----------------------- Model weights (large) ------------------------
+# Pretrained checkpoints are downloaded automatically by Ultralytics.
+# Trained weights are reproducible from src/train.py -> do not commit.
+*.pt
+*.onnx
+*.engine
+
+# --------------------- Training / prediction output -------------------
+# Ultralytics writes runs here (see --project in the scripts).
+results/runs/
+runs/
+
+# ----------------------------- Dataset -------------------------------
+# Do NOT commit the full dataset (large + license restrictions).
+# Keep dataset/README.md only. (dataset/* not dataset/ so the README can be re-included.)
+dataset/*
+!dataset/README.md
+*.zip
+*.tar
+*.tar.gz
+
+# ------------------------- OS / editor cruft -------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

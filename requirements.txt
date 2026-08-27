@@ -1,0 +1,20 @@
+# ----------------------------------------------------------------------
+# AI-Based Weed Detection in Agricultural Fields - Python dependencies
+# ----------------------------------------------------------------------
+# Install (CPU or existing CUDA):
+#     pip install -r requirements.txt
+#
+# For an NVIDIA GPU, install the matching PyTorch build FIRST, e.g.:
+#     pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# then run:  pip install -r requirements.txt
+# ----------------------------------------------------------------------
+
+ultralytics>=8.3.0          # YOLO11 models, training, validation, prediction
+torch>=2.2.0                # deep learning backend
+torchvision>=0.17.0         # vision ops used by torch/ultralytics
+opencv-python>=4.9.0        # image read/write, drawing boxes
+numpy>=1.26.0,<2.3.0        # array math
+matplotlib>=3.8.0           # plots (training curves, samples)
+PyYAML>=6.0                 # read/write data.yaml
+pandas>=2.2.0               # small result tables / CSV summaries
+tqdm>=4.66.0               # progress bars in helper scripts

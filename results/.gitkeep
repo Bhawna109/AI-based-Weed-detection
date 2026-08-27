@@ -1,0 +1,4 @@
+# This folder holds curated evaluation outputs and sample predictions.
+# Bulk training runs live in results/runs/ and are git-ignored.
+# Commit only the small, meaningful artifacts (final metrics JSON, a few plots,
+# a handful of sample prediction images).
