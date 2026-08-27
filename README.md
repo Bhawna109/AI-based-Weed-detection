@@ -88,8 +88,10 @@ image 640×640 ─▶ Backbone (Conv, C3k2, SPPF, C2PSA)      → features @ str
 ## Dataset
 
 **CottonWeedDet12** — 5,648 real cotton-field images, 9,370 bounding boxes, 12
-weed species, YOLO-format annotations, CC BY 4.0.
-Why it fits and how to download: **[dataset/README.md](dataset/README.md)**.
+weed species, bounding-box annotations, **CC BY-NC 4.0** (non-commercial +
+attribution), **~29 GB**.
+Download links, the 12 class names, and **smaller/faster alternatives** (a
+Roboflow YOLO export, CottonWeedDet3, or Colab): **[dataset/README.md](dataset/README.md)**.
 (The dataset itself is **not** committed — license + size.)
 
 Split: **80% train / 10% val / 10% test** via `src/prepare_dataset.py`
@@ -310,5 +312,7 @@ See **[docs/GITHUB.md](docs/GITHUB.md)** for the full command list.
 ## License / attribution
 
 Code: choose a license (MIT is common for learning projects).
-Dataset: **CottonWeedDet12 is CC BY 4.0 — cite the YOLOWeeds paper** if you use
-it. Ultralytics YOLO11 is AGPL-3.0 (or a commercial license).
+Dataset: **CottonWeedDet12 is CC BY-NC 4.0** (non-commercial, attribution) —
+cite the YOLOWeeds paper and the Zenodo DOI if you use it (see
+[dataset/README.md](dataset/README.md)).
+Ultralytics YOLO11 is AGPL-3.0 (or a commercial license).

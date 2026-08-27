@@ -20,8 +20,15 @@ train: images/train
 val: images/val
 test: images/test
 
-# Number of classes and their names (order defines the class index).
-# Replace the list below with the real class names of your dataset.
-# For CottonWeedDet12 use the names from its `notes.json` / `classes.txt`.
+# Names, where the KEY is the class index used in the label .txt files.
+# `prepare_dataset.py` overwrites this section from your dataset's classes.txt.
+#
+# CottonWeedDet12 has these 12 classes (INDEX ORDER MUST come from the
+# dataset's own classes.txt / notes.json - the list below is only a reference):
+#   Carpetweed, CutleafGroundcherry, Eclipta, Goosegrass, Morningglory,
+#   PalmerAmaranth, PricklySida, Purslane, Ragweed, Sicklepod, SpottedSpurge,
+#   Waterhemp
+#
+# Default below is a single generic class for a quick smoke test.
 names:
   0: weed
