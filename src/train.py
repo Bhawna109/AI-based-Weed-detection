@@ -69,6 +69,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--patience", type=int, default=25, help="early-stop after N epochs without improvement")
     p.add_argument("--device", default=None, help="'cpu', '0', '0,1' ... (default: auto)")
     p.add_argument("--workers", type=int, default=4, help="dataloader workers (keep low on Windows)")
+    p.add_argument("--cache", default=None, choices=["ram", "disk"],
+                   help="cache images for faster epochs (ram needs enough memory)")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--name", default=None, help="run name under results/ (default: timestamped)")
     p.add_argument("--resume", action="store_true", help="resume the last interrupted run")
@@ -113,6 +115,8 @@ def main() -> None:
     )
     if args.lr0 is not None:
         train_kwargs["lr0"] = args.lr0
+    if args.cache is not None:
+        train_kwargs["cache"] = args.cache
 
     results = model.train(**train_kwargs)
 
