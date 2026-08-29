@@ -121,13 +121,16 @@ def main() -> None:
     out_json = save_dir / f"metrics_{args.split}.json"
     out_json.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
-    # also drop a copy of the key artifacts into results/ for the README
+    # also drop a copy of the key artifacts into results/ for the README.
+    # (Ultralytics 8.3+ prefixes detection curves with "Box", older versions don't.)
     results_dir = PROJECT_ROOT / "results"
-    for fname in ("confusion_matrix.png", "confusion_matrix_normalized.png",
-                  "PR_curve.png", "F1_curve.png", "R_curve.png", "P_curve.png"):
-        src = save_dir / fname
+    wanted = ("confusion_matrix", "confusion_matrix_normalized",
+              "PR_curve", "BoxPR_curve", "F1_curve", "BoxF1_curve",
+              "R_curve", "BoxR_curve", "P_curve", "BoxP_curve")
+    for stem in wanted:
+        src = save_dir / f"{stem}.png"
         if src.exists():
-            shutil.copy2(src, results_dir / f"{args.split}_{fname}")
+            shutil.copy2(src, results_dir / f"{args.split}_{stem.replace('Box', '')}.png")
     shutil.copy2(out_json, results_dir / out_json.name)
 
     print("\n" + "=" * 60)

@@ -1,0 +1,32 @@
+{
+  "weights": "results\\runs\\weed_yolo11n_run1\\weights\\best.pt",
+  "split": "test",
+  "imgsz": 640,
+  "num_classes": 2,
+  "overall": {
+    "precision": 0.7588510769916159,
+    "recall": 0.6083096429481059,
+    "mAP50": 0.7171188861306541,
+    "mAP50_95": 0.38040742368860014,
+    "fitness": 0.38040742368860014
+  },
+  "per_class": [
+    {
+      "class_id": 0,
+      "class_name": "crop",
+      "precision": 0.7069097568317433,
+      "recall": 0.6170212765957447,
+      "mAP50": 0.6534253415530555,
+      "mAP50_95": 0.33992794298900036
+    },
+    {
+      "class_id": 1,
+      "class_name": "weed",
+      "precision": 0.8107923971514887,
+      "recall": 0.5995980093004669,
+      "mAP50": 0.7808124307082527,
+      "mAP50_95": 0.42088690438820003
+    }
+  ],
+  "plots_dir": "C:\\Users\\patel\\OneDrive\\Desktop\\Documents\\AI-Based Weed Detection in Agricultural Fields\\results\\runs\\test_eval"
+}

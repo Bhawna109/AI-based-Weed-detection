@@ -4,9 +4,7 @@ Detect and localise **weeds** in agricultural field images with **bounding
 boxes**, using a lightweight **YOLO11** object-detection model fine-tuned with
 transfer learning.
 
-<!-- After training, drop a sample prediction here:
-![sample prediction](results/predictions/predict/sample.jpg)
--->
+![sample prediction](results/samples/test_000002.jpg)
 
 ---
 
@@ -164,17 +162,30 @@ PR / F1 curves and a confusion matrix copied into `results/`.
 Ultralytics reports P and R at the confidence that maximises F1; mAP sweeps all
 confidences, so **mAP is the primary metric**.
 
-### Results (fill in after training — do not fake)
+### Results
 
-| Metric | Value |
-|---|---|
-| Precision | _tbd_ |
-| Recall | _tbd_ |
-| mAP@50 | _tbd_ |
-| mAP@50:95 | _tbd_ |
+Real numbers from `src/evaluate.py` on the **235-image test split** — model:
+`yolo11n`, 20 epochs, imgsz 640, optimizer **AdamW** (auto-selected), CPU.
+Dataset: `Francesco/weed-crop-aerial` (2 classes: `crop`, `weed`).
 
-Training curves: `results/training_curves.png` (generate with
-`python src/plot_results.py --run results/runs/<run>`).
+| Metric | Overall | crop | weed |
+|---|---|---|---|
+| Precision | **0.759** | 0.707 | 0.811 |
+| Recall | **0.608** | 0.617 | 0.600 |
+| mAP@50 | **0.717** | 0.653 | 0.781 |
+| mAP@50:95 | **0.380** | 0.340 | 0.421 |
+
+![training curves](results/training_curves.png)
+
+The loss curves are still falling and validation mAP is still rising at epoch 20
+— the model is **under-trained, not over-fit** (train/val losses track closely).
+More epochs (or a larger model) would raise these numbers; 20 was chosen to keep
+the CPU run to a few hours. Regenerate the plot with
+`python src/plot_results.py --run results/runs/<run>`.
+
+Full metrics + per-class JSON: [results/metrics_test.json](results/metrics_test.json).
+Test-set PR curve: `results/test_PR_curve.png`; confusion matrix:
+`results/test_confusion_matrix_normalized.png`.
 
 ## Sample predictions
 
@@ -193,19 +204,33 @@ Saves annotated images (box + species + confidence) to
 `--conf` sets the confidence threshold; `--save-txt` also writes YOLO label
 files.
 
+Eight example detections from the test set are in
+[results/samples/](results/samples/) (2,004 weed boxes were predicted across the
+235 test images at conf 0.25). Example:
+
+![sample detection](results/samples/test_000002.jpg)
+
 ## Limitations
 
-Honest failure modes (details + how to analyse:
-**[docs/ERROR_ANALYSIS.md](docs/ERROR_ANALYSIS.md)**):
+Observed on this run — see the test-set confusion matrix and
+**[docs/ERROR_ANALYSIS.md](docs/ERROR_ANALYSIS.md)** for the full breakdown:
 
-- **False positives** from soil, residue, shadows, reflections.
-- **False negatives** on occluded, border, or blurred weeds.
-- **Small / early-growth weeds** are frequently missed at `imgsz=640`.
-- **Crop ↔ weed confusion**, especially young grass weeds vs. seedlings.
-- **Hard lighting** (harsh sun, dusk, wet soil) degrades performance.
-- **Domain gap:** trained on cotton fields — expect to re-fine-tune for a new
-  crop, region, or camera.
-- **Nano model:** optimised for speed; a larger model recovers some accuracy.
+- **Missed weeds (false negatives) are the biggest issue** — recall 0.60, i.e.
+  ~40% of weeds are not detected. The normalised confusion matrix shows 19% of
+  true weeds and 30% of true crops predicted as background.
+- **Background → "weed" false positives:** of all detections fired on
+  background regions, 94% are labelled `weed` — soil texture, residue and dead
+  leaves trigger low-confidence weed boxes (visible in the sample images).
+- **Crop/weed confusion is low** here (~4% crop→weed, ~0% weed→crop) — the
+  aerial crop rows are visually distinct from scattered weeds in this dataset.
+- **Crop class is weaker** (mAP@50 0.65 vs 0.78 for weed) — only ~410 crop
+  instances vs ~7,400 weed in training (class imbalance).
+- **Under-trained:** 20 epochs on CPU; val metrics had not plateaued.
+- **Small / early-growth weeds** are the low-confidence detections (0.25–0.45);
+  many are near the `--conf` cutoff and flip in/out with the threshold.
+- **Domain gap:** trained on one aerial crop/weed dataset — expect to
+  re-fine-tune for a new crop, region, altitude or camera.
+- **Nano model:** optimised for speed; `yolo11s/m` would recover accuracy.
 - Metrics here are **offline image metrics**, not a field-measured herbicide or
   yield outcome.
 
