@@ -54,13 +54,14 @@ tractor or drone.
 
 ## Model used
 
-**Ultralytics YOLO11n** (`yolo11n.pt`), COCO-pretrained, fine-tuned on the weed
-dataset via **transfer learning** (we do **not** train from scratch).
+**Ultralytics YOLO11**, COCO-pretrained, fine-tuned on the weed dataset via
+**transfer learning** (we do **not** train from scratch).
 
 - Family: YOLO11 (Ultralytics, 2024)
-- Size: **n / nano** — smallest & fastest
+- Sizes trained here: **`yolo11n`** (nano, fast baseline) and **`yolo11s`**
+  (small — the best result, see [Results](#results))
 - Design: **anchor-free**, decoupled detection head, DFL box regression
-- Swap to `yolo11s.pt` / `yolo11m.pt` with `--model` if you need more accuracy.
+- `--model` selects the size; `yolo11m.pt` would push accuracy further.
 
 ## Architecture
 
@@ -166,29 +167,26 @@ confidences, so **mAP is the primary metric**.
 
 Real numbers from `src/evaluate.py` on the **235-image test split**.
 Dataset: `Francesco/weed-crop-aerial` (2 classes: `crop`, `weed`), imgsz 640,
-optimizer **AdamW** (auto-selected), trained on CPU. Two models were run:
+optimizer **AdamW** (auto-selected).
 
-| Test metric | `yolo11n` (20 epochs) | **`yolo11s` (~40 epochs)** |
-|---|---|---|
-| Precision | 0.759 | 0.711 |
-| Recall | 0.608 | **0.725** |
-| mAP@50 | 0.717 | **0.733** |
-| mAP@50:95 | 0.380 | **0.397** |
+| Test metric | `yolo11n` · 20 ep · CPU | `yolo11s` · ~25 ep · CPU | **`yolo11s` · 60 ep · GPU** |
+|---|---|---|---|
+| Precision | 0.759 | 0.711 | **0.783** |
+| Recall | 0.608 | 0.725 | **0.722** |
+| mAP@50 | 0.717 | 0.733 | **0.796** |
+| mAP@50:95 | 0.380 | 0.397 | **0.492** |
 
-Going from `yolo11n` to `yolo11s` (3.5x the parameters) plus more epochs lifted
-**recall from 0.61 to 0.73** — the model now misses far fewer weeds, which was
-the main weakness. Precision dropped slightly (it makes more detections, so a few
-more false positives). `yolo11s` per class: weed mAP@50 0.781 / crop 0.685.
+The GPU run (`yolo11s`, 60 epochs, trained on a Colab T4 via
+[notebooks/train_colab.ipynb](notebooks/train_colab.ipynb)) is the current best:
+**mAP@50 0.80, mAP@50:95 0.49**. The jump in mAP@50:95 (0.40 → 0.49) means the
+predicted boxes are markedly tighter. Per class: weed mAP@50 **0.83**
+(mAP@50:95 0.49) / crop mAP@50 **0.76**.
 
 ![training curves](results/training_curves.png)
 
-Even at 40 epochs the validation curves had not fully plateaued — more epochs, a
-GPU (to train `yolo11m`), and moving the dataset off a cloud-synced folder (disk
-reads were the training bottleneck) are the obvious next gains.
-
-Full metrics + per-class JSON: [results/metrics_test.json](results/metrics_test.json)
-(currently the `yolo11s` run). Best weights: `results/runs/weed_yolo11s_run2b/weights/best.pt`
-(git-ignored — regenerate with `src/train.py`).
+Full metrics + per-class JSON: [results/metrics_test.json](results/metrics_test.json).
+Best weights: `results/runs/weed_yolo11s_colab/weights/best.pt` (git-ignored —
+retrain with the Colab notebook, or `src/train.py --device 0`).
 Test-set PR curve: `results/test_PR_curve.png`; confusion matrix:
 `results/test_confusion_matrix_normalized.png`.
 
@@ -210,27 +208,27 @@ Saves annotated images (box + species + confidence) to
 files.
 
 Eight example detections from the test set are in
-[results/samples/](results/samples/) (2,004 weed boxes were predicted across the
+[results/samples/](results/samples/) (1,892 weed boxes predicted across the
 235 test images at conf 0.25). Example:
 
 ![sample detection](results/samples/test_000002.jpg)
 
 ## Limitations
 
-Observed on the `yolo11s` run — see the test-set confusion matrix and
+Observed on the best (`yolo11s`, GPU) run — see the test-set confusion matrix and
 **[docs/ERROR_ANALYSIS.md](docs/ERROR_ANALYSIS.md)** for the full breakdown:
 
-- **Missed weeds** are still the main error, though much improved — recall 0.73
-  (was 0.60 with `yolo11n`), so ~27% of weeds are still not detected.
+- **Missed weeds** are still the main error — recall 0.72, so ~28% of weeds are
+  not detected. The confusion matrix shows 16% of true weeds and 23% of true
+  crops predicted as background.
 - **Background → "weed" false positives:** soil texture, residue and dead leaves
   trigger mostly low-confidence weed boxes; raising `--conf` to ~0.4 trades a
   little recall for fewer false alarms.
-- **Crop/weed confusion is low** — the aerial crop rows are visually distinct
-  from scattered weeds in this dataset. Expect worse on ground-level datasets.
-- **Crop class is weaker** (mAP@50 0.69 vs 0.78 for weed) — only ~410 crop
+- **Crop/weed confusion is low** (~4% crop→weed, ~0% weed→crop) — the aerial crop
+  rows are visually distinct from scattered weeds here. Expect worse on
+  ground-level datasets.
+- **Crop class is weaker** (mAP@50 0.76 vs 0.83 for weed) — only ~410 crop
   instances vs ~7,400 weed in training (class imbalance).
-- **Not fully converged:** ~40 epochs on CPU; validation metrics were still
-  drifting up.
 - **Small / early-growth weeds** are the low-confidence detections (0.25–0.45);
   many are near the `--conf` cutoff and flip in/out with the threshold.
 - **Domain gap:** trained on one aerial crop/weed dataset — expect to
@@ -241,7 +239,7 @@ Observed on the `yolo11s` run — see the test-set confusion matrix and
 ## Future improvements
 
 - Train at higher resolution (960/1280) or add image **tiling** for small weeds.
-- Try `yolo11s`/`yolo11m`, or hyper-parameter tuning (`model.tune()`).
+- Try `yolo11m` (done: `yolo11n` → `yolo11s`), or tuning (`model.tune()`).
 - Add more data for confused class pairs and rare species; add background images.
 - Domain-specific augmentation for lighting; collect multi-season data.
 - Crop-row masking to suppress between-row false positives.

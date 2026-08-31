@@ -2,40 +2,40 @@
 
 ---
 
-## Findings — `yolo11s` run (`weed_yolo11s_run2b`)
+## Findings — best run (`yolo11s`, 60 epochs, Colab T4 GPU)
 
-**Setup:** `yolo11s`, ~40 epochs total (20 as `yolo11n` baseline concept; this
-run is a continuation of an earlier `yolo11s` run), imgsz 640, AdamW (auto), CPU.
-Dataset `Francesco/weed-crop-aerial`, evaluated on the untouched **235-image test
-split** (1,605 boxes: 1,558 weed, 47 crop).
+**Setup:** `yolo11s`, 60 epochs, imgsz 640, AdamW (auto), trained on a Colab T4
+via `notebooks/train_colab.ipynb`. Dataset `Francesco/weed-crop-aerial`,
+evaluated on the untouched **235-image test split** (1,605 boxes: 1,558 weed,
+47 crop).
 
-**Test metrics (vs the `yolo11n` 20-epoch baseline):**
+**Test metrics across all three runs:**
 
-| | yolo11n | **yolo11s** |
-|---|---|---|
-| Precision | 0.759 | 0.711 |
-| Recall | 0.608 | **0.725** |
-| mAP@50 | 0.717 | **0.733** |
-| mAP@50:95 | 0.380 | **0.397** |
+| | yolo11n·20ep·CPU | yolo11s·25ep·CPU | **yolo11s·60ep·GPU** |
+|---|---|---|---|
+| Precision | 0.759 | 0.711 | **0.783** |
+| Recall | 0.608 | 0.725 | **0.722** |
+| mAP@50 | 0.717 | 0.733 | **0.796** |
+| mAP@50:95 | 0.380 | 0.397 | **0.492** |
 
-**`yolo11s` normalised confusion matrix (columns = ground truth):**
+**Normalised confusion matrix, best run (columns = ground truth):**
 
 | true \ pred | crop | weed | background (missed) |
 |---|---|---|---|
-| **crop** | 0.64 | 0.04 | **0.32** |
-| **weed** | 0.00 | **0.87** | 0.13 |
-| **background** (→ false positive) | 0.03 | **0.97** | – |
+| **crop** | 0.72 | 0.04 | **0.23** |
+| **weed** | 0.00 | **0.84** | 0.16 |
+| **background** (→ false positive) | 0.06 | **0.94** | – |
 
-### 1. False negatives — still the main error, but improved
-- **~27% of weeds are missed** (recall 0.73, up from 0.60). Missed weeds fell
-  from 19% → **13%** of true weed boxes; missed crop is still ~32%.
-- Causes seen in `results/predictions/run2b_test/`: tiny early-growth seedlings,
+### 1. False negatives — the main remaining error
+- **~28% of weeds are missed** (recall 0.72). The matrix shows 16% of true weed
+  boxes and 23% of true crop boxes predicted as background.
+- Causes seen in `results/predictions/colab_test/`: tiny early-growth seedlings,
   weeds at the image border, plants partly hidden by soil clods / shadow.
-- Training curves (`results/training_curves.png`) had not fully plateaued → more
-  epochs / a GPU would help further.
+- The mAP@50:95 jump (0.40 → 0.49) shows the boxes that *are* found are now much
+  tighter — the GPU run's extra epochs mostly improved localisation.
 
 ### 2. Background → "weed" false positives
-- Of every detection placed on a background region, **97% are labelled `weed`**.
+- Of every detection placed on a background region, **94% are labelled `weed`**.
 - Trigger: soil texture, dead/curled leaves, crop residue, dry stems. These come
   out as **low-confidence** boxes (0.25–0.45 in the samples), so raising
   `--conf` to ~0.4 trades a little recall for noticeably fewer false alarms.
@@ -61,17 +61,18 @@ split** (1,605 boxes: 1,558 weed, 47 crop).
   dataset (imagery is mostly even daylight).
 
 ### What would most improve this model (in order)
-1. Train longer (100+ epochs) on a **GPU** — the CPU run capped how far we got.
-2. `yolo11m` instead of `yolo11s`.
-3. Higher inference resolution / tiling for small weeds.
-4. More `crop` training examples to fix the imbalance.
+1. `yolo11m` instead of `yolo11s` (needs the GPU path).
+2. Higher inference resolution / tiling for small weeds (`--imgsz 960`).
+3. More `crop` training examples to fix the imbalance.
+4. A confidence threshold sweep to pick the P/R operating point for the use case
+   (spot-spraying wants high recall; mapping can tolerate lower).
 
 ### Engineering note (not a model issue)
-Training/eval printed `Slow image access ... read: ~1 MB/s` — the dataset lives
-in a **OneDrive-synced folder**, so every epoch re-reads images through the sync
-layer and that was the real training bottleneck (epochs ran 2–3x slower than the
-CPU alone would). Move `dataset/` to a plain local folder (e.g. `C:\weed_data`)
-and update `path:` in `configs/data.yaml`, or use `--cache disk`.
+On the CPU runs, training printed `Slow image access ... read: ~1 MB/s` — the
+dataset had been left in a **OneDrive-synced folder**, so every epoch re-read
+images through the sync layer (~2–3x slower). Fixed by moving `dataset/` to a
+plain local folder (`C:\weed_data`) and pointing `path:` in `configs/data.yaml`
+there. On Colab the data is on local disk so this doesn't apply.
 
 ---
 
