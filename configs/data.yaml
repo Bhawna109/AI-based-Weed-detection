@@ -1,8 +1,23 @@
-path: C:/Users/patel/OneDrive/Desktop/Documents/AI-Based Weed Detection in Agricultural
-  Fields/dataset
+# ----------------------------------------------------------------------
+# data.yaml  -  dataset definition consumed by Ultralytics YOLO
+# ----------------------------------------------------------------------
+# Generated/edited by src/fetch_hf_dataset.py or src/prepare_dataset.py.
+#
+# `path` is an ABSOLUTE path on purpose: Ultralytics resolves a RELATIVE
+# `path:` against its global datasets_dir (~/datasets), not this file.
+#
+# The dataset lives OUTSIDE the project folder (C:\weed_data) so training
+# does not read images through OneDrive's sync layer every epoch (that was
+# a 2-3x slowdown). If you clone this repo elsewhere, re-run
+#   python src/fetch_hf_dataset.py
+# or edit `path` below to wherever your images/ and labels/ folders are.
+# ----------------------------------------------------------------------
+
+path: C:/weed_data
 train: images/train
 val: images/val
 test: images/test
+
 names:
   0: crop
   1: weed
