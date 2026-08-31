@@ -164,26 +164,31 @@ confidences, so **mAP is the primary metric**.
 
 ### Results
 
-Real numbers from `src/evaluate.py` on the **235-image test split** — model:
-`yolo11n`, 20 epochs, imgsz 640, optimizer **AdamW** (auto-selected), CPU.
-Dataset: `Francesco/weed-crop-aerial` (2 classes: `crop`, `weed`).
+Real numbers from `src/evaluate.py` on the **235-image test split**.
+Dataset: `Francesco/weed-crop-aerial` (2 classes: `crop`, `weed`), imgsz 640,
+optimizer **AdamW** (auto-selected), trained on CPU. Two models were run:
 
-| Metric | Overall | crop | weed |
-|---|---|---|---|
-| Precision | **0.759** | 0.707 | 0.811 |
-| Recall | **0.608** | 0.617 | 0.600 |
-| mAP@50 | **0.717** | 0.653 | 0.781 |
-| mAP@50:95 | **0.380** | 0.340 | 0.421 |
+| Test metric | `yolo11n` (20 epochs) | **`yolo11s` (~40 epochs)** |
+|---|---|---|
+| Precision | 0.759 | 0.711 |
+| Recall | 0.608 | **0.725** |
+| mAP@50 | 0.717 | **0.733** |
+| mAP@50:95 | 0.380 | **0.397** |
+
+Going from `yolo11n` to `yolo11s` (3.5x the parameters) plus more epochs lifted
+**recall from 0.61 to 0.73** — the model now misses far fewer weeds, which was
+the main weakness. Precision dropped slightly (it makes more detections, so a few
+more false positives). `yolo11s` per class: weed mAP@50 0.781 / crop 0.685.
 
 ![training curves](results/training_curves.png)
 
-The loss curves are still falling and validation mAP is still rising at epoch 20
-— the model is **under-trained, not over-fit** (train/val losses track closely).
-More epochs (or a larger model) would raise these numbers; 20 was chosen to keep
-the CPU run to a few hours. Regenerate the plot with
-`python src/plot_results.py --run results/runs/<run>`.
+Even at 40 epochs the validation curves had not fully plateaued — more epochs, a
+GPU (to train `yolo11m`), and moving the dataset off a cloud-synced folder (disk
+reads were the training bottleneck) are the obvious next gains.
 
-Full metrics + per-class JSON: [results/metrics_test.json](results/metrics_test.json).
+Full metrics + per-class JSON: [results/metrics_test.json](results/metrics_test.json)
+(currently the `yolo11s` run). Best weights: `results/runs/weed_yolo11s_run2b/weights/best.pt`
+(git-ignored — regenerate with `src/train.py`).
 Test-set PR curve: `results/test_PR_curve.png`; confusion matrix:
 `results/test_confusion_matrix_normalized.png`.
 
@@ -212,25 +217,24 @@ Eight example detections from the test set are in
 
 ## Limitations
 
-Observed on this run — see the test-set confusion matrix and
+Observed on the `yolo11s` run — see the test-set confusion matrix and
 **[docs/ERROR_ANALYSIS.md](docs/ERROR_ANALYSIS.md)** for the full breakdown:
 
-- **Missed weeds (false negatives) are the biggest issue** — recall 0.60, i.e.
-  ~40% of weeds are not detected. The normalised confusion matrix shows 19% of
-  true weeds and 30% of true crops predicted as background.
-- **Background → "weed" false positives:** of all detections fired on
-  background regions, 94% are labelled `weed` — soil texture, residue and dead
-  leaves trigger low-confidence weed boxes (visible in the sample images).
-- **Crop/weed confusion is low** here (~4% crop→weed, ~0% weed→crop) — the
-  aerial crop rows are visually distinct from scattered weeds in this dataset.
-- **Crop class is weaker** (mAP@50 0.65 vs 0.78 for weed) — only ~410 crop
+- **Missed weeds** are still the main error, though much improved — recall 0.73
+  (was 0.60 with `yolo11n`), so ~27% of weeds are still not detected.
+- **Background → "weed" false positives:** soil texture, residue and dead leaves
+  trigger mostly low-confidence weed boxes; raising `--conf` to ~0.4 trades a
+  little recall for fewer false alarms.
+- **Crop/weed confusion is low** — the aerial crop rows are visually distinct
+  from scattered weeds in this dataset. Expect worse on ground-level datasets.
+- **Crop class is weaker** (mAP@50 0.69 vs 0.78 for weed) — only ~410 crop
   instances vs ~7,400 weed in training (class imbalance).
-- **Under-trained:** 20 epochs on CPU; val metrics had not plateaued.
+- **Not fully converged:** ~40 epochs on CPU; validation metrics were still
+  drifting up.
 - **Small / early-growth weeds** are the low-confidence detections (0.25–0.45);
   many are near the `--conf` cutoff and flip in/out with the threshold.
 - **Domain gap:** trained on one aerial crop/weed dataset — expect to
   re-fine-tune for a new crop, region, altitude or camera.
-- **Nano model:** optimised for speed; `yolo11s/m` would recover accuracy.
 - Metrics here are **offline image metrics**, not a field-measured herbicide or
   yield outcome.
 

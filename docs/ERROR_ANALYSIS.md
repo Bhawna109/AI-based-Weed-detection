@@ -2,33 +2,40 @@
 
 ---
 
-## Findings — run `weed_yolo11n_run1`
+## Findings — `yolo11s` run (`weed_yolo11s_run2b`)
 
-**Setup:** `yolo11n`, 20 epochs, imgsz 640, AdamW (auto), CPU. Dataset
-`Francesco/weed-crop-aerial`, evaluated on the untouched **235-image test split**
-(1,605 boxes: 1,558 weed, 47 crop).
+**Setup:** `yolo11s`, ~40 epochs total (20 as `yolo11n` baseline concept; this
+run is a continuation of an earlier `yolo11s` run), imgsz 640, AdamW (auto), CPU.
+Dataset `Francesco/weed-crop-aerial`, evaluated on the untouched **235-image test
+split** (1,605 boxes: 1,558 weed, 47 crop).
 
-**Test metrics:** P 0.759 · R 0.608 · mAP@50 0.717 · mAP@50:95 0.380
-(weed: mAP@50 0.781 / crop: mAP@50 0.653).
+**Test metrics (vs the `yolo11n` 20-epoch baseline):**
 
-**Normalised confusion matrix (columns = ground truth):**
+| | yolo11n | **yolo11s** |
+|---|---|---|
+| Precision | 0.759 | 0.711 |
+| Recall | 0.608 | **0.725** |
+| mAP@50 | 0.717 | **0.733** |
+| mAP@50:95 | 0.380 | **0.397** |
+
+**`yolo11s` normalised confusion matrix (columns = ground truth):**
 
 | true \ pred | crop | weed | background (missed) |
 |---|---|---|---|
-| **crop** | 0.66 | 0.04 | **0.30** |
-| **weed** | 0.00 | 0.81 | **0.19** |
-| **background** (→ false positive) | 0.06 | **0.94** | – |
+| **crop** | 0.64 | 0.04 | **0.32** |
+| **weed** | 0.00 | **0.87** | 0.13 |
+| **background** (→ false positive) | 0.03 | **0.97** | – |
 
-### 1. False negatives — the dominant error
-- **~40% of weeds are missed** (recall 0.60). 19% of true weed boxes and 30% of
-  true crop boxes are predicted as background.
-- Causes seen in `results/predictions/run1_test/`: tiny early-growth seedlings,
+### 1. False negatives — still the main error, but improved
+- **~27% of weeds are missed** (recall 0.73, up from 0.60). Missed weeds fell
+  from 19% → **13%** of true weed boxes; missed crop is still ~32%.
+- Causes seen in `results/predictions/run2b_test/`: tiny early-growth seedlings,
   weeds at the image border, plants partly hidden by soil clods / shadow.
-- The training curves (`results/training_curves.png`) show val mAP still rising
-  at epoch 20 → the model is **under-trained**; more epochs should lift recall.
+- Training curves (`results/training_curves.png`) had not fully plateaued → more
+  epochs / a GPU would help further.
 
 ### 2. Background → "weed" false positives
-- Of every detection placed on a background region, **94% are labelled `weed`**.
+- Of every detection placed on a background region, **97% are labelled `weed`**.
 - Trigger: soil texture, dead/curled leaves, crop residue, dry stems. These come
   out as **low-confidence** boxes (0.25–0.45 in the samples), so raising
   `--conf` to ~0.4 trades a little recall for noticeably fewer false alarms.
@@ -54,10 +61,17 @@
   dataset (imagery is mostly even daylight).
 
 ### What would most improve this model (in order)
-1. Train longer (60–100 epochs) — biggest, cheapest win; needs a GPU.
-2. Higher inference resolution / tiling for small weeds.
-3. `yolo11s` instead of `yolo11n`.
+1. Train longer (100+ epochs) on a **GPU** — the CPU run capped how far we got.
+2. `yolo11m` instead of `yolo11s`.
+3. Higher inference resolution / tiling for small weeds.
 4. More `crop` training examples to fix the imbalance.
+
+### Engineering note (not a model issue)
+Training/eval printed `Slow image access ... read: ~1 MB/s` — the dataset lives
+in a **OneDrive-synced folder**, so every epoch re-reads images through the sync
+layer and that was the real training bottleneck (epochs ran 2–3x slower than the
+CPU alone would). Move `dataset/` to a plain local folder (e.g. `C:\weed_data`)
+and update `path:` in `configs/data.yaml`, or use `--cache disk`.
 
 ---
 
