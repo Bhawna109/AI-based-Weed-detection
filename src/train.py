@@ -73,6 +73,9 @@ def parse_args() -> argparse.Namespace:
                    help="cache images for faster epochs (ram needs enough memory)")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--name", default=None, help="run name under results/ (default: timestamped)")
+    p.add_argument("--project", default=None,
+                   help="output dir for the run (default: results/runs). Point at a "
+                        "Google Drive path on Colab so checkpoints survive a disconnect.")
     p.add_argument("--resume", action="store_true", help="resume the last interrupted run")
     return p.parse_args()
 
@@ -82,7 +85,7 @@ def main() -> None:
     set_seed(args.seed)
     device = pick_device(args.device)
     run_name = args.name or f"weed_yolo11n_{datetime.now():%Y%m%d_%H%M%S}"
-    project_dir = PROJECT_ROOT / "results" / "runs"
+    project_dir = Path(args.project) if args.project else PROJECT_ROOT / "results" / "runs"
 
     print(f"Model            : {args.model} (transfer learning from pretrained weights)")
     print(f"Data             : {args.data}")
