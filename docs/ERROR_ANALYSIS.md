@@ -52,12 +52,31 @@ evaluated on the untouched **235-image test split** (1,605 boxes: 1,558 weed,
 
 ### 5. Class imbalance
 - `crop` scores lower on every metric. Training data is ~410 crop vs ~7,400 weed
-  instances (~1:18). More crop examples (or `--single-cls` if only weed matters)
-  would help.
-- **Not yet tried:** `src/train.py --cls-pw <0-1>` weights the classification loss
-  by `(1/class_count)**cls_pw` (a built-in Ultralytics 8.4 option) — `1.0` gives
-  crop mistakes ~18x the loss weight of weed mistakes. Worth a run before
-  collecting more data, since it costs nothing but compute time.
+  instances (~1:18).
+
+**Tried: `--cls-pw 0.5`** (weights the classification loss by
+`(1/class_count)**cls_pw`, a built-in Ultralytics 8.4 option — same 60-epoch
+`yolo11s` GPU run otherwise, saved separately as `weed_yolo11s_colab_clspw`).
+**Result: rejected, it made both classes worse.**
+
+| Metric | `cls_pw=0` (kept, best) | `cls_pw=0.5` |
+|---|---|---|
+| mAP@50 overall | 79.6% | 77.6% |
+| mAP@50 crop | 76.4% | 74.9% |
+| mAP@50 weed | 82.8% | 80.4% |
+
+The confusion matrix shows why: true-crop boxes predicted as background fell
+from 23% to 4% (fewer outright misses), but true-crop predicted as **weed**
+jumped from 4% to **45%**. The extra loss weight pushed the model to stop
+*missing* crop, but it doesn't give the model better features to tell crop and
+weed apart, so most of those recovered crop detections came out mislabelled as
+weed instead — which is worse for the actual use case, since a crop plant
+labelled "weed" is a crop plant that gets sprayed.
+
+**Conclusion:** `cls_pw` alone is not a fix here; the limitation is the crop
+class's small, low-diversity training set, not the loss weighting. The
+actionable next step is collecting more real `crop` examples, not reweighting.
+A much smaller value (e.g. 0.15) might behave differently but was not tested.
 
 ### 6. Difficult lighting / background
 - Wet/dark soil patches and strong shadow edges account for several of the
