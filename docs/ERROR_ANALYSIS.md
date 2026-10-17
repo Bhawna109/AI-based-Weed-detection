@@ -52,8 +52,12 @@ evaluated on the untouched **235-image test split** (1,605 boxes: 1,558 weed,
 
 ### 5. Class imbalance
 - `crop` scores lower on every metric. Training data is ~410 crop vs ~7,400 weed
-  instances. More crop examples (or `--single-cls` if only weed matters) would
-  help.
+  instances (~1:18). More crop examples (or `--single-cls` if only weed matters)
+  would help.
+- **Not yet tried:** `src/train.py --cls-pw <0-1>` weights the classification loss
+  by `(1/class_count)**cls_pw` (a built-in Ultralytics 8.4 option) — `1.0` gives
+  crop mistakes ~18x the loss weight of weed mistakes. Worth a run before
+  collecting more data, since it costs nothing but compute time.
 
 ### 6. Difficult lighting / background
 - Wet/dark soil patches and strong shadow edges account for several of the

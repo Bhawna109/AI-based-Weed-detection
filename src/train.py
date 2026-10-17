@@ -71,6 +71,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--workers", type=int, default=4, help="dataloader workers (keep low on Windows)")
     p.add_argument("--cache", default=None, choices=["ram", "disk"],
                    help="cache images for faster epochs (ram needs enough memory)")
+    p.add_argument("--cls-pw", type=float, default=None, metavar="[0-1]",
+                   help="class-imbalance correction: weights the classification loss by "
+                        "(1/class_count)**cls_pw. 0 = off (default), 1 = full inverse-frequency. "
+                        "Our crop:weed ratio is ~1:18, so try 0.3-0.5 first, 1.0 for the full effect.")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--name", default=None, help="run name under results/ (default: timestamped)")
     p.add_argument("--project", default=None,
@@ -120,6 +124,12 @@ def main() -> None:
         train_kwargs["lr0"] = args.lr0
     if args.cache is not None:
         train_kwargs["cache"] = args.cache
+    if args.cls_pw is not None:
+        if not 0.0 <= args.cls_pw <= 1.0:
+            raise SystemExit("--cls-pw must be between 0 and 1")
+        train_kwargs["cls_pw"] = args.cls_pw
+        print(f"Class-imbalance correction: cls_pw={args.cls_pw} "
+              f"(weight = (1/class_count)**{args.cls_pw})")
 
     results = model.train(**train_kwargs)
 
