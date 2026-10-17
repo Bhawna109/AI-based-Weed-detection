@@ -61,17 +61,28 @@ evaluated on the untouched **235-image test split** (1,605 boxes: 1,558 weed,
 
 | Metric | `cls_pw=0` (kept, best) | `cls_pw=0.5` |
 |---|---|---|
-| mAP@50 overall | 79.6% | 77.6% |
-| mAP@50 crop | 76.4% | 74.9% |
-| mAP@50 weed | 82.8% | 80.4% |
+| Precision | 78.3% | 78.8% (~unchanged) |
+| **Recall** | 72.2% | **67.2%** (down) |
+| mAP@50 | 79.6% | 77.7% (down) |
+| **mAP@50:95** | 49.2% | **43.5%** (down sharply) |
 
-The confusion matrix shows why: true-crop boxes predicted as background fell
-from 23% to 4% (fewer outright misses), but true-crop predicted as **weed**
-jumped from 4% to **45%**. The extra loss weight pushed the model to stop
-*missing* crop, but it doesn't give the model better features to tell crop and
-weed apart, so most of those recovered crop detections came out mislabelled as
-weed instead — which is worse for the actual use case, since a crop plant
-labelled "weed" is a crop plant that gets sprayed.
+| Per class (P / R / mAP50 / mAP50-95) | crop | weed |
+|---|---|---|
+| `cls_pw=0` (best) | 75.4 / 72.3 / 76.4 / 49.4 | 81.1 / 72.0 / 82.8 / 48.9 |
+| `cls_pw=0.5` | 76.7 / **68.1** / 74.9 / **41.4** | 80.9 / **66.4** / 80.4 / 45.7 |
+
+Precision barely moved, but **recall fell for both classes — including crop,
+the class this was meant to help** — and **mAP@50:95 dropped sharply**, so box
+quality got worse too, not just classification confidence. The confusion
+matrix explains part of it: true-crop boxes predicted as background fell from
+23% to 4% (fewer outright misses), but true-crop predicted as **weed** jumped
+from 4% to **45%**. The extra loss weight pushed the model to stop *missing*
+crop, but it doesn't give the model better features to tell crop and weed
+apart, so most of those recovered crop detections came out mislabelled as weed
+instead — worse for the actual use case, since a crop plant labelled "weed" is
+a crop plant that gets sprayed. The mAP@50:95 drop suggests the heavier,
+differently-shaped loss also disrupted convergence somewhat within the same
+60-epoch budget, not just the class decision boundary.
 
 **Conclusion:** `cls_pw` alone is not a fix here; the limitation is the crop
 class's small, low-diversity training set, not the loss weighting. The
